@@ -13,7 +13,6 @@ const DELETE_SAVED_URL = `${API_BASE}/articles/saved`;
 
 let articles = [];
 
-// Load saved articles from server on page load
 async function loadSavedArticles() {
     try {
         const response = await fetch(SAVED_LIST_API_URL);
@@ -26,7 +25,6 @@ async function loadSavedArticles() {
     return [];
 }
 
-// Save article to server
 async function saveArticleToServer(article) {
     try {
         await fetch(SAVE_API_URL, {
@@ -41,7 +39,6 @@ async function saveArticleToServer(article) {
 }
 
 // Delete article from server
-async function deleteArticleFromServer(articleId) {
     try {
         await fetch(`${DELETE_SAVED_URL}/${articleId}`, {
             method: 'DELETE'
@@ -53,7 +50,6 @@ async function deleteArticleFromServer(articleId) {
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async function () {
-    try {
         // Check backend connection
         const isBackendAvailable = await checkBackendConnection();
         if (!isBackendAvailable) {
@@ -75,9 +71,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 /**
  * Check backend connection
- */
-async function checkBackendConnection() {
-    try {
         const response = await fetch(HEALTH_CHECK_URL);
         return response.ok;
     } catch (error) {
@@ -93,9 +86,6 @@ let pendingArticle = null;
  */
 async function addArticle() {
     const contentInput = document.getElementById('article-content');
-    const addBtn = document.getElementById('classify-btn');
-    const btnText = addBtn.querySelector('.btn-text');
-    const loader = document.getElementById('loader');
 
     // Check backend connection first
     const isBackendAvailable = await checkBackendConnection();
@@ -172,9 +162,6 @@ async function loadSampleArticles() {
         const response = await fetch(SAMPLE_API_URL);
         if (!response.ok) {
             throw new Error('Failed to load sample articles');
-        }
-
-        const data = await response.json();
 
         // Add sample articles to the list
         data.articles.forEach(article => {
@@ -208,9 +195,6 @@ async function clearArticles() {
                 await deleteArticleFromServer(article.id);
             }
         }
-        articles = [];
-        renderArticles();
-        updateStats();
     }
 }
 
@@ -227,9 +211,6 @@ function filterArticles() {
 function updateStats() {
     // Update total articles count
     const totalStat = document.getElementById('total-articles-stat');
-    if (totalStat) {
-        totalStat.textContent = articles.length;
-    }
 
     // Update category counts (match AG News-style labels from the model)
     const categoryCounts = {
@@ -237,20 +218,15 @@ function updateStats() {
         'Sports': 0,
         'Business': 0,
         'Sci/Tech': 0
-    };
-
-    articles.forEach(article => {
         if (categoryCounts[article.category] !== undefined) {
             categoryCounts[article.category]++;
         }
     });
+const totalStat = document.getElementById('total-articles-stat');
+    if (totalStat) {
+        totalStat.textContent = articles.length;
+    }
 
-    // Update DOM
-    Object.keys(categoryCounts).forEach(category => {
-        // ID format in HTML: count-world, count-sports, count-business, count-scitech
-        const normalizedId =
-            category === 'Sci/Tech' ? 'scitech' : category.toLowerCase();
-        const countEl = document.getElementById(`count-${normalizedId}`);
         if (countEl) {
             countEl.textContent = categoryCounts[category];
         }
@@ -287,16 +263,13 @@ function renderArticles() {
         return;
     }
 
-    if (emptyState) {
         emptyState.style.display = 'none';
     }
 
     // Create article cards
     filtered.forEach((article, index) => {
-        const card = createArticleCard(article, index);
         grid.appendChild(card);
-    });
-}
+    
 
 /**
  * Create an article card element
@@ -311,7 +284,6 @@ function createArticleCard(article, index) {
     card.innerHTML = `
         <div class="article-header">
             <span class="badge badge-${categoryClass}">${getCategoryIcon(article.category)} ${article.category}</span>
-            <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">${article.confidence}%</span>
         </div>
         <h3 class="article-title">${escapeHtml(article.title || 'Untitled Article')}</h3>
         <p class="article-snippet">${escapeHtml(snippet)}</p>
@@ -319,9 +291,6 @@ function createArticleCard(article, index) {
             <span class="article-date">${formatTime(article.timestamp)}</span>
             <div class="article-actions">
                 <button class="btn-delete" onclick="deleteArticle(event, ${index})" title="Delete article">🗑️</button>
-            </div>
-        </div>
-    `;
 
     return card;
 }
@@ -347,9 +316,6 @@ async function deleteArticle(event, index) {
     if (!confirm('Are you sure you want to delete this article?')) return;
 
     const categoryFilter = document.getElementById('category-filter').value;
-    const filtered = categoryFilter === 'all'
-        ? [...articles]
-        : articles.filter(a => a.category === categoryFilter);
 
     const articleToDelete = filtered[index];
 
@@ -363,9 +329,6 @@ async function deleteArticle(event, index) {
 }
 
 /**
- * Show error message
- */
-function showError(message) {
     const errorSection = document.getElementById('error-section');
     const errorMessage = document.getElementById('error-message');
 
@@ -389,9 +352,6 @@ function formatTime(timestamp) {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
-    });
-}
-
 /**
  * Escape HTML to prevent XSS
  */
@@ -407,9 +367,6 @@ function escapeHtml(text) {
 function showSuccessNotification(category, confidence) {
     const modal = document.getElementById('success-modal');
     const modalCategory = document.getElementById('modal-category');
-    const modalConfidence = document.getElementById('modal-confidence');
-
-    if (modal && modalCategory && modalConfidence) {
         modalCategory.textContent = category;
         modalConfidence.textContent = confidence + '%';
         modal.style.display = 'flex';
@@ -422,18 +379,12 @@ function showSuccessNotification(category, confidence) {
 async function saveAndCloseModal() {
     if (pendingArticle) {
         pendingArticle.isSaved = true;
-        await saveArticleToServer(pendingArticle);
-        articles.unshift(pendingArticle);
-        renderArticles();
         updateStats();
         pendingArticle = null;
     }
     const modal = document.getElementById('success-modal');
     if (modal) modal.style.display = 'none';
 }
-
-/**
- * Close success modal (discards the article)
  */
 function closeSuccessModal() {
     pendingArticle = null;
@@ -449,9 +400,6 @@ function showAboutModal() {
     if (modal) modal.style.display = 'flex';
 }
 
-/**
- * Close About modal
- */
 function closeAboutModal() {
     const modal = document.getElementById('about-modal');
     if (modal) modal.style.display = 'none';

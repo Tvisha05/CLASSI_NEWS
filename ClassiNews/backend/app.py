@@ -16,7 +16,6 @@ import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 
-# Disable SSL for NLTK
 try:
     _create_unverified_https_context = ssl._create_unverified_context
 except AttributeError:
@@ -24,7 +23,6 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 
-# Download NLTK stopwords if not already downloaded
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
@@ -35,7 +33,6 @@ try:
 except LookupError:
     nltk.download('stopwords')
 
-# Initialize preprocessing components
 stop_words = set(stopwords.words('english'))
 ps = PorterStemmer()
 
@@ -46,9 +43,6 @@ def preprocess(text):
     words = [ps.stem(w) for w in text.split() if w not in stop_words]
     return " ".join(words)
 
-# Label → Category mapping (matches the notebook's `label_map`)
-# AG News style labels:
-# 1 → World, 2 → Sports, 3 → Business, 4 → Sci/Tech
 LABEL_TO_CATEGORY = {
     1: "World",
     2: "Sports",
@@ -56,25 +50,21 @@ LABEL_TO_CATEGORY = {
     4: "Sci/Tech",
 }
 
-# Initialize FastAPI app
 app = FastAPI(title="ClassiNews API", description="News Article Classification API")
 
-# Configure CORS to allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load model and preprocessor
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'model.pkl')
 PREPROCESS_PATH = os.path.join(os.path.dirname(__file__), 'preprocess.pkl')
 
 print("Loading model and preprocessor...")
 try:
-    # Load using joblib (compatible with notebook model)
     model = joblib.load(MODEL_PATH)
     vectorizer = joblib.load(PREPROCESS_PATH)
     print("Model and preprocessor loaded successfully!")
@@ -89,13 +79,9 @@ except Exception as e:
     model = None
     vectorizer = None
 
-
-# Request model
 class NewsArticle(BaseModel):
     text: str
 
-
-# Response model
 class PredictionResponse(BaseModel):
     category: str
     confidence: float
@@ -112,7 +98,6 @@ def read_root():
             "/articles/sample": "GET - Get sample articles for dashboard",
             "/health": "GET - Check API health"
         },
-        # Expose the dataset categories used by the model
         "categories": list(LABEL_TO_CATEGORY.values())
     }
 
@@ -130,10 +115,8 @@ def _predict_with_confidence(text_tfidf):
     Helper to get (mapped_category, confidence_percent) for a single TF-IDF vector.
     Works with models that have either predict_proba or decision_function (e.g. RidgeClassifier).
     """
-    # Raw model prediction (numeric label: 1–4)
     raw_label = model.predict(text_tfidf)[0]
 
-    # Map numeric label to human‑readable category
     prediction = LABEL_TO_CATEGORY.get(raw_label, str(raw_label))
 
     confidence = 1.0
@@ -144,15 +127,12 @@ def _predict_with_confidence(text_tfidf):
             confidence = float(np.max(probabilities))
         elif hasattr(model, "decision_function"):
             scores = model.decision_function(text_tfidf)
-            # scores can be shape (n_classes,) or (1, n_classes)
             if scores.ndim > 1:
                 scores = scores[0]
-            # Convert scores to pseudo-probabilities via softmax
             exps = np.exp(scores - np.max(scores))
             probs = exps / np.sum(exps)
             confidence = float(np.max(probs))
     except Exception:
-        # Fall back to 100% if anything goes wrong while computing confidence
         confidence = 1.0
 
     return prediction, round(confidence * 100, 2)
@@ -182,13 +162,10 @@ def predict_category(article: NewsArticle):
         )
     
     try:
-        # Preprocess text (same as training: lowercase, remove punctuation, stem, remove stopwords)
         processed_text = preprocess(article.text)
 
-        # Transform preprocessed text to TF-IDF vector
         text_tfidf = vectorizer.transform([processed_text])
 
-        # Predict using helper that supports both predict_proba and decision_function
         prediction, confidence = _predict_with_confidence(text_tfidf)
 
         return PredictionResponse(
@@ -241,10 +218,6 @@ def predict_batch(articles: List[NewsArticle]):
 
     return {"results": results, "count": len(results)}
 
-
-
-
-# --- Persistence Layer ---
 SAVED_ARTICLES_FILE = os.path.join(os.path.dirname(__file__), 'saved_articles.json')
 
 class SavedArticle(BaseModel):
@@ -281,7 +254,6 @@ def get_saved_articles():
 def save_article(article: SavedArticle):
     """Save an article to the server"""
     articles = load_saved_articles_from_file()
-    # Check if already exists
     if not any(a['id'] == article.id for a in articles):
         articles.insert(0, article.dict())
         save_articles_to_file(articles)
