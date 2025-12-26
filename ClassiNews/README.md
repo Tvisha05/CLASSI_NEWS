@@ -31,7 +31,6 @@ ClassiNews/
 ├── notebooks/
 │   ├── gen_ai_notebook.ipynb # Model training notebook
 │   └── test.csv             # Sample dataset
-├── HOW_TO_RUN.md            # Detailed run instructions
 └── README.md                # Project documentation
 ```
 
@@ -280,14 +279,3 @@ The model classifies articles into:
 - "Latest blockbuster movie breaks box office records worldwide" → **Entertainment** (91%+)
 
 
-
-## 🙏 Acknowledgments
-
-- BBC News Dataset
-- AG News Dataset
-- scikit-learn community
-- FastAPI framework
-
----
-
-**Happy Classifying! 📰✨**
