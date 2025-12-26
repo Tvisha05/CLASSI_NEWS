@@ -18,22 +18,21 @@
 ```
 ClassiNews/
 ├── backend/
-│   ├── app.py              # FastAPI server with 5 categories
-│   ├── model.pkl           # Trained ML model
-│   ├── preprocess.pkl      # TF-IDF vectorizer
-│   └── requirements.txt    # Python dependencies
+│   ├── app.py               # FastAPI backend application
+│   ├── model.pkl            # Trained machine learning model
+│   ├── preprocess.pkl       # TF-IDF vectorizer
+│   ├── requirements.txt     # Python dependencies
+│   └── saved_articles.json  # Persistent storage for articles
 ├── frontend/
-│   ├── dashboard.html      # Main dashboard UI
-│   ├── dashboard.js        # Dashboard functionality
-│   ├── dashboard.css       # Dashboard styling
-│   ├── dashboard-fixes.css # Additional UI fixes
-│   ├── index.html          # Simple classifier UI
-│   ├── style.css           # Simple UI styling
-│   └── script.js           # API integration
+│   ├── dashboard.html       # Main dashboard interface
+│   ├── dashboard.js         # Dashboard logic and API integration
+│   ├── dashboard.css        # Dashboard styling
+│   └── news.jpeg            # UI asset
 ├── notebooks/
-│   ├── news_classification_model.ipynb  # Original training notebook
-│   └── ag_news_training.py  # AG News training script
-└── README.md               # This file
+│   ├── gen_ai_notebook.ipynb # Model training notebook
+│   └── test.csv             # Sample dataset
+├── HOW_TO_RUN.md            # Detailed run instructions
+└── README.md                # Project documentation
 ```
 
 ## 🚀 Quick Start
@@ -280,9 +279,7 @@ The model classifies articles into:
 - "Government announces new policies to boost economic growth" → **Politics** (93%+)
 - "Latest blockbuster movie breaks box office records worldwide" → **Entertainment** (91%+)
 
-## 📄 License
 
-This project is open source and available for educational purposes.
 
 ## 🙏 Acknowledgments
 
